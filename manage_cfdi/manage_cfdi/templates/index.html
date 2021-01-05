@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>API cdfi-descarga</title>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static 'css/api.css' %}">
+	<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" integrity="sha384-cg6SkqEOCV1NbJoCu11+bm0NvBRc8IYLRGXkmNrqUBfTjmMYwNKPWBTIKyw9mHNJ" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/grids-responsive-min.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script
+  src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+  integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+  crossorigin="anonymous"></script>
+	<script type="text/javascript">
+	$( document ).ready(function() {
+		$('i[rel="pre"]').replaceWith(function() {
+		    return $('<pre><code>' + $(this).html() + '</code></pre>');
+		});
+		var pres = document.querySelectorAll('pre,kbd,blockquote');
+		for (var i = 0; i < pres.length; i++) {
+		  pres[i].addEventListener("dblclick", function () {
+		    var selection = getSelection();
+		    var range = document.createRange();
+		    range.selectNodeContents(this);
+		    selection.removeAllRanges();
+		    selection.addRange(range);
+		  }, false);
+		}
+	});
+	</script>
+</head>
+<body>
+<!-- -->
+<div id="layout" class="pure-g">
+    <div class="sidebar pure-u-1 pure-u-md-1-6">
+        <div class="header">
+            <h1 class="brand-title">REST API</h1>
+            <h2 class="brand-tagline">cdfi descarga</h2>
+            <p><a href="/accounts/logout/">Salir</a></p>
+        </div>
+    </div>
+
+    <div class="content pure-u-1 pure-u-md-3-4">
+        <div id="wrapper">
+            <!-- A wrapper for all the blog posts -->
+            <div class="posts">
+                <h1 class="content-subhead">Api Root</h1>
+                <h2>En todas las peticiones necesitas el parametro "aKey" el cual debe contener tu llave de acceso.</h2>
+
+
+                <!-- -->
+                <section class="post">
+                    <header class="post-header">
+
+                        <h2 class="post-title">Solicitud de descarga</h2>
+                    </header>
+
+                    <div class="post-description">
+                        <p>
+                            Para obtener la descarga de documentos
+                        </p>
+						<pre class='code code-jquery'>
+							<label><strong>GET</strong> /descarga/authsat<br/><strong>PARAMETROS</strong><br/>aKey={access_key} rfc={user_rfc} <br/> startdate={YYYY-M-D} enddate={YYYY-M-D} </label>
+                             <br/>
+							<code>  
+
+  							</code>
+						</pre>
+                    </div>
+                </section>
+                <!-- -->
+
+                <!-- -->
+                <section class="post">
+                    <header class="post-header">
+
+                        <h2 class="post-title">Solicitudes por RFC</h2>
+                    </header>
+
+                    <div class="post-description">
+                        <p>
+                            Para obtener listado de todas las solicitudes realizadas por ese RFC
+                        </p>
+                        <pre class='code code-jquery'>
+                            <label><strong>GET</strong> /descarga/solicitudes<br/><strong>PARAMETROS</strong><br/>aKey={access_key} rfc={user_rfc}</label>
+                             <br/>
+                            <code>  
+
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <!-- -->
+
+                <!-- -->
+                <section class="post">
+                    <header class="post-header">
+
+                        <h2 class="post-title">Verificar solicitud</h2>
+                    </header>
+
+                    <div class="post-description">
+                        <p>
+                            Obtener la verificación y descarga de los paquetes de una solicitud
+                        </p>
+                        <pre class='code code-jquery'>
+                            <label><strong>GET</strong> /descarga/verifica<br/><strong>PARAMETROS</strong><br/>cfdi_solicitud_id={cfdi_solicitud_id} cfdi_solicitud_sat_id={cfdi_solicitud_sat_id} aKey={access_key}</label>
+                             <br/>
+                            <code>  
+
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <!-- -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- -->
+</body>
+</html>
