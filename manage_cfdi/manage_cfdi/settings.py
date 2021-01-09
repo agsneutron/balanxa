@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'descarga',
+    'Proceso',
 ]
 
 MIDDLEWARE = [
@@ -103,7 +104,7 @@ DATABASES = {
       'ENGINE': 'django.db.backends.mysql',
       'NAME': 'db_analytica',
       'USER': 'root',
-      'PASSWORD': 'GmZ:7827',
+      'PASSWORD': 'alex2727',
       'HOST': 'localhost',
       'PORT': '3306',
   }
