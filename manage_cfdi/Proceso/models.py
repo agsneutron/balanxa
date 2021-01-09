@@ -4,7 +4,7 @@ from django.core.validators import FileExtensionValidator
 
 
 class Procesa(models.Model):
-    archivo = models.FileField(verbose_name="Archivo SAT",  null=False, blank=False)
+    archivo = models.FileField(verbose_name="Archivo SAT",  null=False, blank=False, validators=[FileExtensionValidator(allowed_extensions=['zip'])])
     fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
 
     class Meta:
@@ -12,7 +12,7 @@ class Procesa(models.Model):
         verbose_name_plural = "Archivos SAT"
 
     def __str__(self):  # __unicode__ on Python 2
-        return self.archivo.name + ' - ' + self.fecha
+        return self.archivo.name
 
 
 class DatosArchivo(models.Model):
@@ -65,7 +65,7 @@ class PolizaArchivo(models.Model):
         verbose_name_plural = "Archivos Polizas"
 
     def __str__(self):  # __unicode__ on Python 2
-        return self.archivo.name + ' - ' + self.fecha
+        return self.archivo.name
 
 
 class DatosPoliza(models.Model):
@@ -128,26 +128,87 @@ class ConteoPolizaLog(models.Model):
         return self.archivo.name
 
 
-class Comparar_UUID(models.Model):
+class CompararArchivos(models.Model):
     archivo_sat = models.ForeignKey(Procesa, verbose_name="Archivo SAT:", null=False, on_delete=False,)
     archivo_poliza = models.ForeignKey(PolizaArchivo, verbose_name="Archivo Poliza:", null=False, on_delete=False, )
-    total_UUID_sat = models.BigIntegerField(verbose_name="Total de UUID SAT:", null=False, unique=False)
-    total_UUID_poliza = models.BigIntegerField(verbose_name="Total de UUID Poliza:", null=False, unique=False)
-    total_sat_no_poliza = models.BigIntegerField(verbose_name="Total de UUID SAT no Poliza:", null=False, unique=False)
-    total_poliza_no_sat = models.BigIntegerField(verbose_name="Total de UUID Poliza no SAT:", null=False, unique=False)
+    total_registros_sat = models.BigIntegerField(verbose_name="Total de registros SAT:", null=False, unique=False)
+    total_registros_poliza = models.BigIntegerField(verbose_name="Total de registros Poliza:", null=False, unique=False)
     fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
+    id_key = models.CharField(verbose_name="Comparación", max_length=200, null=False, blank=True, unique=False)
 
     class Meta:
-        verbose_name = "Comparación UUID"
-        verbose_name_plural = "Comparaciones UUID"
+        verbose_name = "Comparación Archivos"
+        verbose_name_plural = "Comparaciones Archivos"
 
     def __str__(self):  # __unicode__ on Python 2
-        return self.archivo_sat.name + '-' + self.archivo_poliza.name + '-' + self.fecha_proceso
+        return self.id_key + '-' + self.archivo_sat.archivo.name + '-' + self.archivo_poliza.archivo.name
 
 
-class DiferenciasUUID(models.Model):
-    UUID_sat = models.CharField(verbose_name="UUID SAT", max_length=200, null=False,
-                                         blank=True, unique=False)
-    UUID_poliza = models.CharField(verbose_name="UUID Poliza", max_length=200, null=False,
-                                         blank=True, unique=False)
-    comparacion = models.ForeignKey(Comparar_UUID, verbose_name="Comparación", null=False, on_delete=False,)
+class CifrasComparacion(models.Model):
+    archivos_comparados = models.ForeignKey(CompararArchivos, verbose_name="Comparacion:", null=False, on_delete=False, )
+    total_UUID_sat = models.BigIntegerField(verbose_name="Total de UUID SAT:", null=False, unique=False)
+    total_UUID_poliza = models.BigIntegerField(verbose_name="Total de UUID Poliza:", null=False, unique=False)
+    total_UUID_sat_poliza = models.BigIntegerField(verbose_name="Total de UUID SAT Poliza:", null=False, unique=False)
+    total_UUID_poliza_sat = models.BigIntegerField(verbose_name="Total de UUID Poliza SAT:", null=False, unique=False)
+    total_UUID_sat_no_poliza = models.BigIntegerField(verbose_name="Total de UUID SAT no Poliza:", null=False, unique=False)
+    total_UUID_poliza_no_sat = models.BigIntegerField(verbose_name="Total de UUID Poliza no SAT:", null=False, unique=False)
+    total_folio_sat = models.BigIntegerField(verbose_name="Total de Folio SAT:", null=False, unique=False)
+    total_folio_poliza = models.BigIntegerField(verbose_name="Total de Folio Poliza:", null=False, unique=False)
+    total_folio_sat_no_poliza = models.BigIntegerField(verbose_name="Total de Folio SAT no Poliza:", null=False, unique=False)
+    total_folio_poliza_no_sat = models.BigIntegerField(verbose_name="Total de Folio Poliza no SAT:", null=False, unique=False)
+    total_folio_sat_poliza = models.BigIntegerField(verbose_name="Total de Folio SAT Poliza:", null=False, unique=False)
+    total_folio_poliza_sat = models.BigIntegerField(verbose_name="Total de Folio Poliza SAT:", null=False, unique=False)
+    total_total_sat = models.BigIntegerField(verbose_name="Total de Total SAT:", null=False, unique=False)
+    total_total_poliza = models.BigIntegerField(verbose_name="Total de Total Poliza:", null=False, unique=False)
+    total_total_sat_no_poliza = models.BigIntegerField(verbose_name="Total de Total SAT no Poliza:", null=False, unique=False)
+    total_total_poliza_no_sat = models.BigIntegerField(verbose_name="Total de Total Poliza no SAT:", null=False, unique=False)
+    total_total_sat_poliza = models.BigIntegerField(verbose_name="Total de Total SAT Poliza:", null=False, unique=False)
+    total_total_poliza_sat = models.BigIntegerField(verbose_name="Total de Total Poliza SAT:", null=False, unique=False)
+    total_subtotal_sat = models.BigIntegerField(verbose_name="Total de Sub Total SAT:", null=False, unique=False)
+    total_subtotal_poliza = models.BigIntegerField(verbose_name="Total de Sub Total Poliza:", null=False, unique=False)
+    total_subtotal_sat_no_poliza = models.BigIntegerField(verbose_name="Total de Sub Total SAT no Poliza:", null=False, unique=False)
+    total_subtotal_poliza_no_sat = models.BigIntegerField(verbose_name="Total de Sub Total Poliza no SAT:", null=False, unique=False)
+    total_subtotal_sat_poliza = models.BigIntegerField(verbose_name="Total de Sub Total SAT Poliza:", null=False, unique=False)
+    total_subtotal_poliza_sat = models.BigIntegerField(verbose_name="Total de Sub Total Poliza SAT:", null=False, unique=False)
+    total_iva_sat = models.BigIntegerField(verbose_name="Total de IVA SAT:", null=False, unique=False)
+    total_iva_poliza = models.BigIntegerField(verbose_name="Total de IVA Poliza:", null=False, unique=False)
+    total_iva_sat_no_poliza = models.BigIntegerField(verbose_name="Total de IVA SAT no Poliza:", null=False, unique=False)
+    total_iva_poliza_no_sat = models.BigIntegerField(verbose_name="Total de IVA Poliza no SAT:", null=False, unique=False)
+    total_iva_sat_poliza = models.BigIntegerField(verbose_name="Total de IVA SAT Poliza:", null=False, unique=False)
+    total_iva_poliza_sat = models.BigIntegerField(verbose_name="Total de IVA Poliza SAT:", null=False, unique=False)
+    total_rfcemisor_sat = models.BigIntegerField(verbose_name="Total de RFC Emisor SAT:", null=False, unique=False)
+    total_rfcemisor_poliza = models.BigIntegerField(verbose_name="Total de RFC Emisor Poliza:", null=False, unique=False)
+    total_rfcemisor_sat_no_poliza = models.BigIntegerField(verbose_name="Total de RFC Emisor SAT no Poliza:", null=False, unique=False)
+    total_rfcemisor_poliza_no_sat = models.BigIntegerField(verbose_name="Total de RFC Emisor Poliza no SAT:", null=False, unique=False)
+    total_rfcemisor_sat_poliza = models.BigIntegerField(verbose_name="Total de RFC Emisor SAT Poliza:",  null=False, unique=False)
+    total_rfcemisor_poliza_sat = models.BigIntegerField(verbose_name="Total de RFC Emisor Poliza SAT:", null=False, unique=False)
+    total_rfcreceptor_sat = models.BigIntegerField(verbose_name="Total de RFC Receptor SAT:", null=False, unique=False)
+    total_rfcreceptor_poliza = models.BigIntegerField(verbose_name="Total de RFC Receptor Poliza:", null=False, unique=False)
+    total_rfcreceptor_sat_no_poliza = models.BigIntegerField(verbose_name="Total de RFC Receptor SAT no Poliza:", null=False, unique=False)
+    total_rfcreceptor_poliza_no_sat = models.BigIntegerField(verbose_name="Total de RFC Receptor Poliza no SAT:", null=False, unique=False)
+    total_rfcreceptor_sat_poliza = models.BigIntegerField(verbose_name="Total de RFC Receptor SAT Poliza:", null=False, unique=False)
+    total_rfcreceptor_poliza_sat = models.BigIntegerField(verbose_name="Total de RFC Receptor Poliza SAT:", null=False, unique=False)
+    total_nombreemisor_sat = models.BigIntegerField(verbose_name="Total de Nombre Emisor SAT:", null=False, unique=False)
+    total_nombreemisor_poliza = models.BigIntegerField(verbose_name="Total de Nombre Emisor Poliza:", null=False, unique=False)
+    total_nombreemisor_sat_no_poliza = models.BigIntegerField(verbose_name="Total de Nombre Emisor SAT no Poliza:", null=False, unique=False)
+    total_nombreemisor_poliza_no_sat = models.BigIntegerField(verbose_name="Total de Nombre Emisor Poliza no SAT:", null=False, unique=False)
+    total_nombreemisor_sat_poliza = models.BigIntegerField(verbose_name="Total de Nombre Emisor SAT Poliza:", null=False, unique=False)
+    total_nombreemisor_poliza_sat = models.BigIntegerField(verbose_name="Total de Nombre Emisor Poliza SAT:", null=False, unique=False)
+    total_nombrereceptor_sat = models.BigIntegerField(verbose_name="Total de Nombre Receptor SAT:", null=False, unique=False)
+    total_nombrereceptor_poliza = models.BigIntegerField(verbose_name="Total de Nombre Receptor Poliza:", null=False, unique=False)
+    total_nombrereceptor_sat_no_poliza = models.BigIntegerField(verbose_name="Total de Nombre Receptor SAT no Poliza:", null=False, unique=False)
+    total_nombrereceptor_poliza_no_sat = models.BigIntegerField(verbose_name="Total de Nombre Receptor Poliza no SAT:", null=False, unique=False)
+    total_nombrereceptor_sat_poliza = models.BigIntegerField(verbose_name="Total de Nombre Receptor SAT Poliza:", null=False, unique=False)
+    total_nombrereceptor_poliza_sat = models.BigIntegerField(verbose_name="Total de Nombre Receptor Poliza SAT:", null=False, unique=False)
+    fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de comparación:", auto_now=True, null=False, blank=False)
+
+
+class Diferencias(models.Model):
+    #field_sat = models.CharField(verbose_name="Registro SAT:", max_length=200, null=False, blank=True, unique=False)
+    #field_poliza = models.CharField(verbose_name="Registro Poliza:", max_length=200, null=False, blank=True, unique=False)
+    field_sat = models.ForeignKey(DatosArchivo,verbose_name="Registro SAT:", on_delete=False, null=True)
+    field_poliza = models.ForeignKey(DatosPoliza,verbose_name="Registro Poliza:", on_delete=False, null=True)
+    diferencia = models.CharField(verbose_name="Diferencia:", max_length=200, null=False, blank=True, unique=False)
+    nivel_comparacion = models.CharField(verbose_name="Nivel de Comparación:", max_length=200, null=False, blank=True, unique=False)
+    source = models.CharField(verbose_name="Archivo Fuente:", max_length=200, null=False, blank=True, unique=False)
+    comparacion = models.ForeignKey(CompararArchivos, verbose_name="Comparación:", null=False, on_delete=False,)
