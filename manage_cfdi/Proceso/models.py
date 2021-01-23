@@ -1,11 +1,26 @@
 
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from django.contrib.auth.models import User
+
+class Empresa(models.Model):
+    nombre = models.CharField(verbose_name="Nombre de la Empresa", max_length=200, null=False, blank=True, unique=True)
+    membresia = models.BigIntegerField(verbose_name="Membresia", null=False, blank=True, unique=False)
+
+    class Meta:
+        verbose_name = "Empresa"
+        verbose_name_plural = "Empresas"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.nombre + ' - ' + self.membresia
 
 
 class Procesa(models.Model):
     archivo = models.FileField(verbose_name="Archivo SAT",  null=False, blank=False, validators=[FileExtensionValidator(allowed_extensions=['zip'])])
-    fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
+    fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga", auto_now=True, null=False, blank=False)
+    total_registros_procesados = models.BigIntegerField(verbose_name="Total de XML procesados", null=False, unique=False)
+    total_registros_error = models.BigIntegerField(verbose_name="Total de XML con error", null=False, unique=False)
+    total_registros_correctos = models.BigIntegerField(verbose_name="Total de XML correctos", null=False, unique=False)
 
     class Meta:
         verbose_name = "Archivo SAT"
@@ -32,8 +47,8 @@ class DatosArchivo(models.Model):
     estatus = models.CharField(verbose_name="Estatus", max_length=200, null=False, blank=True, unique=False)
 
     class Meta:
-        verbose_name = "Datos del PKT SAT"
-        verbose_name_plural = "Datos del PKT SAT"
+        verbose_name = "Datos de XML en PKT SAT"
+        verbose_name_plural = "Datos de XML en PKT SAT"
 
     def __str__(self):  # __unicode__ on Python 2
         return self.identificador_archivo + ' - ' + self.folio
@@ -49,8 +64,8 @@ class DatosLog(models.Model):
 
 
     class Meta:
-        verbose_name = "Log datos SAT"
-        verbose_name_plural = "Log datos SAT"
+        verbose_name = "Log datos SAT con Error"
+        verbose_name_plural = "Log datos SAT con Error"
 
     def __str__(self):  # __unicode__ on Python 2
         return self.atributo
@@ -59,6 +74,10 @@ class DatosLog(models.Model):
 class PolizaArchivo(models.Model):
     archivo = models.FileField(verbose_name="Archivo",  null=False, blank=False, validators=[FileExtensionValidator(allowed_extensions=['xls', 'xlsx'])])
     fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
+    total_registros_procesados = models.BigIntegerField(verbose_name="Total de Polizas procesadas", null=False,
+                                                        unique=False)
+    total_registros_error = models.BigIntegerField(verbose_name="Total de Polizas con error", null=False, unique=False)
+    total_registros_correctos = models.BigIntegerField(verbose_name="Total de Polizas correctas", null=False, unique=False)
 
     class Meta:
         verbose_name = "Archivo Poliza"
@@ -121,8 +140,22 @@ class ConteoPolizaLog(models.Model):
     fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
 
     class Meta:
-        verbose_name = "Log de Registros Procesados"
-        verbose_name_plural = "Log de Registros PRocesados"
+        verbose_name = "Cifras de Registros Procesados POLIZA"
+        verbose_name_plural = "Cifras de Registros Procesados POLIZA"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.archivo.name
+
+
+class ConteoXMLLog(models.Model):
+    archivo = models.ForeignKey(DatosArchivo, verbose_name="Archivo:", null=False, on_delete=models.CASCADE,)
+    total_error = models.BigIntegerField(verbose_name="Total de atributos con error:", null=False, unique=False)
+    total_exito = models.BigIntegerField(verbose_name="Total de atributos correctos:", null=False, unique=False)
+    fecha = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
+
+    class Meta:
+        verbose_name = "Cifras de Registros Procesados XML"
+        verbose_name_plural = "Cifras de Registros Procesados XML"
 
     def __str__(self):  # __unicode__ on Python 2
         return self.archivo.name
@@ -142,6 +175,22 @@ class CompararArchivos(models.Model):
 
     def __str__(self):  # __unicode__ on Python 2
         return self.id_key + '-' + self.archivo_sat.archivo.name + '-' + self.archivo_poliza.archivo.name
+
+
+class CompararPorFecha(models.Model):
+    empresa = models.ForeignKey(Empresa, verbose_name="Empresa:", null=False, on_delete=False,)
+    total_registros_sat = models.BigIntegerField(verbose_name="Total de registros SAT:", null=False, unique=False)
+    total_registros_poliza = models.BigIntegerField(verbose_name="Total de registros Poliza:", null=False, unique=False)
+    fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
+    id_key = models.CharField(verbose_name="Comparación", max_length=200, null=False, blank=True, unique=False)
+
+    class Meta:
+        verbose_name = "Comparación de Archivos por Fecha"
+        verbose_name_plural = "Comparaciones de Archivos por Fecha"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.id_key + '-' + self.archivo_sat.archivo.name + '-' + self.archivo_poliza.archivo.name
+
 
 
 class CifrasComparacion(models.Model):
@@ -203,6 +252,13 @@ class CifrasComparacion(models.Model):
     fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de comparación:", auto_now=True, null=False, blank=False)
     registro_comparacion = models.CharField(verbose_name="Registro de Comparación:", null=False, blank=False, max_length=200,)
 
+    class Meta:
+        verbose_name = "Cifras de Comparación de Archivos"
+        verbose_name_plural = "Cifras de Comparación de Archivos"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.archivos_comparados.id_key + '-' + self.registro_comparacion
+
 
 class Diferencias(models.Model):
     field_sat = models.ForeignKey(DatosArchivo, verbose_name="Registro SAT:", on_delete=False, null=True)
@@ -213,3 +269,25 @@ class Diferencias(models.Model):
     nivel_comparacion = models.CharField(verbose_name="Nivel de Comparación:", max_length=200, null=False, blank=True, unique=False)
     source = models.CharField(verbose_name="Archivo Fuente:", max_length=200, null=False, blank=True, unique=False)
     comparacion = models.ForeignKey(CompararArchivos, verbose_name="Comparación:", null=False, on_delete=False,)
+
+
+    class Meta:
+        verbose_name = "Diferencias de Archivos"
+        verbose_name_plural = "Diferencias de Archivos"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.archivos_comparados.id_key + '-' + self.registro_comparacion
+
+
+class LogEventos(models.Model):
+    accion = models.CharField(verbose_name="Acción", max_length=200, null=False, blank=True, unique=False)
+    registros_procesados = models.BigIntegerField(verbose_name="Total de registros procesados", null=False, unique=False)
+    fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de proceso", auto_now=True, null=False, blank=False)
+    usuario_proceso = models.ForeignKey(User, verbose_name="Usuario", blank="False", null=False, related_name="Usuario", on_delete=False,)
+
+    class Meta:
+        verbose_name = "Log de Eventos"
+        verbose_name_plural = "Log de Eventos"
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.accion

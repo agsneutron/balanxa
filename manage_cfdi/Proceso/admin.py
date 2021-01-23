@@ -1,16 +1,31 @@
 from django.contrib import admin
 
 # Register your models here.
-from Proceso.models import Procesa, DatosArchivo, DatosLog, PolizaArchivo, DatosPoliza, DatosPolizaLog, ConteoPolizaLog, CompararArchivos, Diferencias, CifrasComparacion
+from Proceso.models import Procesa, DatosArchivo, DatosLog, PolizaArchivo, DatosPoliza, DatosPolizaLog, ConteoPolizaLog, CompararArchivos, Diferencias, CifrasComparacion, Empresa, LogEventos, ConteoXMLLog
+
 from xml.dom import minidom
 import zipfile
 import pandas as pnd
 from time import gmtime, strftime
 
 
-class ProcesaAdmin(admin.ModelAdmin):
-    list_display = ('archivo',)  #'uuid', 'folio', 'emisorrfc', 'receptorrfc', 'archivo',)
+def do_LogEventos(accion, numero, usuario):
+    logEvento = LogEventos(
+        accion=accion,
+        registros_procesados=numero,
+        usuario_proceso=usuario,
+    )
+    logEvento.save()
 
+
+class EmpresaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'membresia')
+    search_fields = ('nombre', 'membresia')
+
+
+class ProcesaAdmin(admin.ModelAdmin):
+    list_display = ('fecha','archivo','total_registros_procesados', 'total_registros_error', 'total_registros_correctos')  #'uuid', 'folio', 'emisorrfc', 'receptorrfc', 'archivo',)
+    readonly_fields = ('fecha', 'total_registros_procesados', 'total_registros_error', 'total_registros_correctos')
 
     def do_Log(self, atr, idn, pkt):
 
@@ -21,13 +36,30 @@ class ProcesaAdmin(admin.ModelAdmin):
         )
         logDato.save()
 
+
+    def do_LogConteo(self, p_archivo, p_total_error, p_total_exito,):
+
+        logConteo = ConteoXMLLog(
+            archivo = p_archivo,
+            total_error = p_total_error,
+            total_exito = p_total_exito,
+        )
+        logConteo.save()
+
     def save_model(self, request, obj, form, change):
 
+        obj.total_registros_procesados = 0
+        obj.total_registros_error = 0
+        obj.total_registros_correctos = 0
         super(ProcesaAdmin, self).save_model(request, obj, form, change)
+
+        objZIP = Procesa.objects.get(pk=obj.id)
 
         zf = zipfile.ZipFile(obj.archivo, 'r')
         s_pkt = ''
-
+        xml_procesados = 0
+        xml_error = 0
+        xml_ok = 0
         s_pkt = zf.filename
         for name in zf.namelist():
             s_folio = ''
@@ -41,6 +73,11 @@ class ProcesaAdmin(admin.ModelAdmin):
             s_identificador = ''
             s_fechaemision = ''
             s_trasladado = ''
+            xml_flag_error = False
+            xml_flag_ok = False
+            xml_procesados += 1
+            att_error = 0
+            att_ok = 0
 
             if not name.startswith('__MACOSX/'):
                 f = zf.open(name)
@@ -48,7 +85,6 @@ class ProcesaAdmin(admin.ModelAdmin):
                 print(f.name)
 
                 s_identificador = f.name
-
                 xmlfile = minidom.parse(f)
 
                 # getItem  folio, totales
@@ -59,32 +95,29 @@ class ProcesaAdmin(admin.ModelAdmin):
                     if item.hasAttribute('Folio'):
                         print(item.attributes['Folio'].value)
                         s_folio = item.attributes['Folio'].value
+                        att_ok += 1
                     else:
                         self.do_Log('Folio', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                     if item.hasAttribute('SubTotal'):
                         print(item.attributes['SubTotal'].value)
                         s_subtotal = item.attributes['SubTotal'].value
+                        att_ok += 1
                     else:
                         self.do_Log('SubTotal', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                     if item.hasAttribute('Total'):
                         print(item.attributes['Total'].value)
                         s_total = item.attributes['Total'].value
+                        att_ok += 1
                     else:
                         self.do_Log('Total', s_identificador, s_pkt)
-
-                # getItem  impuestos trasladados
-                items = xmlfile.getElementsByTagName('cfdi:Impuestos')
-                # all item attributes
-                print('\nImpuestos attributes:')
-                for item in items:
-                    if item.hasAttribute('TotalImpuestosTrasladados'):
-                        print(item.attributes['TotalImpuestosTrasladados'].value)
-                        s_trasladado = item.attributes['TotalImpuestosTrasladados'].value
-                    else:
-                        self.do_Log('TotalImpuestosTrasladados', s_identificador, s_pkt)
-
+                        xml_flag_error = True
+                        att_error += 1
 
                 # getItem  rfc emisor, nombre emisor,
                 items = xmlfile.getElementsByTagName('cfdi:Emisor')
@@ -95,14 +128,20 @@ class ProcesaAdmin(admin.ModelAdmin):
                     if item.hasAttribute('Rfc'):
                         print(item.attributes['Rfc'].value)
                         s_emisorrfc = item.attributes['Rfc'].value
+                        att_ok += 1
                     else:
                         self.do_Log('Rfc Emisor', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                     if item.hasAttribute('Nombre'):
                         s_emisornombre = item.attributes['Nombre'].value
                         print(item.attributes['Nombre'].value)
+                        att_ok += 1
                     else:
                         self.do_Log('Nombre Emisor', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                 # getItem  rfc emisor, nombre emisor,
                 items = xmlfile.getElementsByTagName('cfdi:Receptor')
@@ -113,14 +152,20 @@ class ProcesaAdmin(admin.ModelAdmin):
                     if item.hasAttribute('Rfc'):
                         s_receptorrfc = item.attributes['Rfc'].value
                         print(item.attributes['Rfc'].value)
+                        att_ok += 1
                     else:
                         self.do_Log('Rfc Receptor', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                     if item.hasAttribute('Nombre'):
                         print(item.attributes['Nombre'].value)
                         s_receptornombre = item.attributes['Nombre'].value
+                        att_ok += 1
                     else:
                         self.do_Log('Nombre Receptor', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                 # getItem uuid, fecha de emision
                 items = xmlfile.getElementsByTagName('tfd:TimbreFiscalDigital')
@@ -131,14 +176,51 @@ class ProcesaAdmin(admin.ModelAdmin):
                     if item.hasAttribute('FechaTimbrado'):
                         print(item.attributes['FechaTimbrado'].value)
                         s_fechaemision = item.attributes['FechaTimbrado'].value
+                        att_ok += 1
                     else:
                         self.do_Log('FechaTimbrado', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
 
                     if item.hasAttribute('UUID'):
                         print(item.attributes['UUID'].value)
                         s_uuid = item.attributes['UUID'].value
+                        att_ok += 1
                     else:
                         self.do_Log('UUID', s_identificador, s_pkt)
+                        xml_flag_error = True
+                        att_error += 1
+
+                # getItem  impuestos trasladados
+                xml_sinconceptos = xmlfile.documentElement
+                print (xml_sinconceptos)
+                print ("childs")
+                print (xml_sinconceptos.childNodes)
+                for child in xml_sinconceptos.childNodes:
+                    print (child.tagName)
+                    if (child.tagName == "cfdi:Impuestos"):
+                        print(child)
+                        if child.hasAttribute('TotalImpuestosTrasladados'):
+                            print(child.attributes['TotalImpuestosTrasladados'].value)
+                            s_trasladado = child.attributes['TotalImpuestosTrasladados'].value
+                            att_ok += 1
+                        else:
+                            self.do_Log('TotalImpuestosTrasladados', s_identificador, s_pkt)
+                            xml_flag_error = True
+                            att_error += 1
+
+                # items = xmlfile.getElementsByTagName('cfdi:Impuestos TotalImpuestosTrasladados')
+                # # all item attributes
+                # print('\nImpuestos attributes:')
+                # for item in items:
+                #     print('\nNodeType Item:')
+                #     print(item.nodeType)
+                #     print(item)
+                #     if item.hasAttribute('TotalImpuestosTrasladados'):
+                #         print(item.attributes['TotalImpuestosTrasladados'].value)
+                #         s_trasladado = item.attributes['TotalImpuestosTrasladados'].value
+                #     else:
+                #         self.do_Log('TotalImpuestosTrasladados', s_identificador, s_pkt)
 
                 files_data = DatosArchivo(
                     identificador_archivo=s_identificador,
@@ -157,7 +239,18 @@ class ProcesaAdmin(admin.ModelAdmin):
                 )
                 files_data.save()
 
+            if (xml_flag_error == True):
+                xml_error += 1
+            else:
+                xml_ok += 1
+            self.do_LogConteo(files_data, att_error, att_ok)
 
+
+        objZIP.total_registros_procesados = xml_procesados
+        objZIP.total_registros_error = xml_error
+        objZIP.total_registros_correctos = xml_ok
+        objZIP.save(update_fields=['total_registros_procesados', 'total_registros_error','total_registros_correctos'])
+        do_LogEventos("CARGA ARCHIVO SAT " + s_pkt, xml_procesados, request.user)
 
 
 class DatosArchivoAdmin(admin.ModelAdmin):
@@ -173,7 +266,7 @@ class DatosArchivoAdmin(admin.ModelAdmin):
     search_fields = ('uuid', 'folio', 'emisorrfc', 'receptorrfc', 'identificador_archivo', 'identificador_pkt')
 
 
-class DatosLogdmin(admin.ModelAdmin):
+class DatosLogAdmin(admin.ModelAdmin):
     list_display = ('atributo', 'identificador_archivo', 'identificador_pkt')
     search_fields = ('atributo', 'identificador_archivo', 'identificador_pkt')
 
@@ -2870,13 +2963,20 @@ class CifrasComparacionAdmin(admin.ModelAdmin):
     search_fields = ('archivos_comparados','registro_comparacion','fecha_proceso',)
 
 
+class LogEventosAdmin(admin.ModelAdmin):
+    list_display = ('accion', 'registros_procesados', 'fecha_proceso','usuario_proceso',)
+    search_fields = ('accion', 'registros_procesados', 'fecha_proceso','usuario_proceso',)
+
+
 admin.site.register(Procesa, ProcesaAdmin)
 admin.site.register(DatosArchivo, DatosArchivoAdmin)
-admin.site.register(DatosLog, DatosLogdmin)
+admin.site.register(DatosLog, DatosLogAdmin)
 admin.site.register(PolizaArchivo, PolizaArchivoAdmin)
 admin.site.register(DatosPoliza, DatosPolizaAdmin)
 admin.site.register(DatosPolizaLog, DatosPolizaLogAdmin)
 admin.site.register(ConteoPolizaLog, ConteoPolizaLogAdmin)
 admin.site.register(CompararArchivos, CompararArchivosAdmin)
 admin.site.register(Diferencias, DiferenciasAdmin)
-admin.site.register(CifrasComparacion,CifrasComparacionAdmin)
+admin.site.register(CifrasComparacion, CifrasComparacionAdmin)
+admin.site.register(Empresa, EmpresaAdmin)
+admin.site.register(LogEventos,LogEventosAdmin)
