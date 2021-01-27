@@ -10,5 +10,7 @@ urlpatterns = [
      #/Procesa/
 
      url(r'^get_keys/$', ProcesaArchivo.as_view(), name='procesar'),
+     url(r'^get_set/$', get_DataSet.as_view(), name='dataset'),
+
 
 ]

@@ -2,10 +2,10 @@
 
 from django.http import HttpResponse
 from django.views.generic import ListView
-from Proceso.models import Procesa
 from xml.dom import minidom
 import zipfile
 import json
+from Proceso.models import Procesa, DatosArchivo, DatosPoliza
 
 
 class ProcesaArchivo(ListView):
@@ -68,7 +68,7 @@ class ProcesaArchivo(ListView):
             return HttpResponse(json.dumps(json_response, indent=4, sort_keys=False, ensure_ascii=False),
                                 'application/json; charset=utf-8')
 
-        except Exception, e:
+        except Exception as e:
             return HttpResponse("Error: " + str(e.message))
 
 
@@ -134,5 +134,21 @@ class LeeArchivo(ListView):
             return HttpResponse(json.dumps(json_response, indent=4, sort_keys=False, ensure_ascii=False),
                                 'application/json; charset=utf-8')
 
-        except Exception, e:
+        except Exception as e:
             return HttpResponse("Error: " + str(e.message))
+
+
+class get_DataSet(ListView):
+
+    def get(self, request, *args, **kwargs):
+        p_rfc = request.GET.get('p_rfc')
+        p_fecha_inicio = request.GET.get('p_fecha_inicio')
+        p_fecha_fin = request.GET.get('p_fecha_fin')
+        print("RFC: " + p_rfc)
+        print(p_fecha_inicio)
+        print(p_fecha_fin)
+        response = DatosArchivo.objects.filter(emisorrfc=p_rfc, fechaemision__range=(p_fecha_inicio, p_fecha_fin))
+        print(response)
+        response = DatosPoliza.objects.filter(RFC_EMISOR=p_rfc, FECHA_CREO_XML__range=(p_fecha_inicio, p_fecha_fin))
+        print(response)
+        return HttpResponse(response,'application/json; charset=utf-8')
