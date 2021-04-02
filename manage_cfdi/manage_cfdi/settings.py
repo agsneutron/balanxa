@@ -104,9 +104,9 @@ DATABASES = {
       'ENGINE': 'django.db.backends.mysql',
       'NAME': 'db_analytica',
       'USER': 'root',
-      'PASSWORD': 'alex2727',
-      'HOST': 'localhost',
-      'PORT': '3306',
+      'PASSWORD': 'GmZ:7827',
+      'HOST': '',
+      'PORT': '',
   }
 }
 

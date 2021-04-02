@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
                 ('total_sat_no_poliza', models.BigIntegerField(verbose_name='Total de UUID SAT no Poliza:')),
                 ('total_poliza_no_sat', models.BigIntegerField(verbose_name='Total de UUID Poliza no SAT:')),
                 ('fecha_proceso', models.DateTimeField(auto_now=True, verbose_name='Fecha / Hora de carga:')),
-                ('archivo_poliza', models.ForeignKey(on_delete=False, to='Proceso.PolizaArchivo', verbose_name='Archivo Poliza:')),
-                ('archivo_sat', models.ForeignKey(on_delete=False, to='Proceso.Procesa', verbose_name='Archivo SAT:')),
+                ('archivo_poliza', models.ForeignKey(on_delete=models.CASCADE, to='Proceso.PolizaArchivo', verbose_name='Archivo Poliza:')),
+                ('archivo_sat', models.ForeignKey(on_delete=models.CASCADE, to='Proceso.Procesa', verbose_name='Archivo SAT:')),
             ],
             options={
                 'verbose_name': 'Comparación UUID',
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('UUID_sat', models.CharField(blank=True, max_length=200, verbose_name='UUID SAT')),
                 ('UUID_poliza', models.CharField(blank=True, max_length=200, verbose_name='UUID Poliza')),
-                ('comparacion', models.ForeignKey(on_delete=False, to='Proceso.Comparar_UUID', verbose_name='Comparación')),
+                ('comparacion', models.ForeignKey(on_delete=models.CASCADE, to='Proceso.Comparar_UUID', verbose_name='Comparación')),
             ],
         ),
     ]

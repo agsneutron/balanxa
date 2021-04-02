@@ -173,8 +173,8 @@ class ConteoXMLLog(models.Model):
 
 class CompararArchivos(models.Model):
     ## comparación de archivo vs archivo
-    archivo_sat = models.ForeignKey(Procesa, verbose_name="Archivo SAT:", null=False, on_delete=False,)
-    archivo_poliza = models.ForeignKey(PolizaArchivo, verbose_name="Archivo Poliza:", null=False, on_delete=False, )
+    archivo_sat = models.ForeignKey(Procesa, verbose_name="Archivo SAT:", null=False, on_delete=models.CASCADE)
+    archivo_poliza = models.ForeignKey(PolizaArchivo, verbose_name="Archivo Poliza:", null=False, on_delete=models.CASCADE, )
     total_registros_sat = models.BigIntegerField(verbose_name="Total de registros SAT:", null=False, unique=False)
     total_registros_poliza = models.BigIntegerField(verbose_name="Total de registros Poliza:", null=False, unique=False)
     fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de carga:", auto_now=True, null=False, blank=False)
@@ -190,7 +190,7 @@ class CompararArchivos(models.Model):
 
 class CompararPorFecha(models.Model):
     #comparación fecha vs fecha
-    empresa = models.ForeignKey(Empresa, verbose_name="Empresa", null=False, on_delete=False,)
+    empresa = models.ForeignKey(Empresa, verbose_name="Empresa", null=False, on_delete=models.CASCADE,)
     fecha_inicio = models.DateTimeField(verbose_name="Fecha inicio", null=False, blank=False)
     fecha_fin = models.DateTimeField(verbose_name="Fecha fin",  null=False, blank=False)
     total_registros_sat = models.BigIntegerField(verbose_name="Total de registros SAT", null=False, unique=False)
@@ -208,7 +208,7 @@ class CompararPorFecha(models.Model):
 
 class CifrasComparacion(models.Model):
     #cifras control de la comparación archivo vs archivo
-    archivos_comparados = models.ForeignKey(CompararArchivos, verbose_name="Comparacion:", null=False, on_delete=False, )
+    archivos_comparados = models.ForeignKey(CompararArchivos, verbose_name="Comparacion:", null=False, on_delete=models.CASCADE, )
     total_UUID_sat = models.BigIntegerField(verbose_name="UUIDs en archivo SAT:", null=False, unique=False)
     total_UUID_poliza = models.BigIntegerField(verbose_name="UUIDs en archivo Poliza:", null=False, unique=False)
     total_UUID_sat_poliza = models.BigIntegerField(verbose_name="UUIDs del SAT en Poliza:", null=False, unique=False)
@@ -276,7 +276,7 @@ class CifrasComparacion(models.Model):
 
 class CifrasComparacionFecha(models.Model):
     #cifras control de la comparación archivo vs archivo
-    fechas_comparacion = models.ForeignKey(CompararPorFecha, verbose_name="Comparacion:", null=False, on_delete=False, )
+    fechas_comparacion = models.ForeignKey(CompararPorFecha, verbose_name="Comparacion:", null=False, on_delete=models.CASCADE, )
     total_UUID_sat = models.BigIntegerField(verbose_name="UUIDs en archivo SAT:", null=False, unique=False)
     total_UUID_poliza = models.BigIntegerField(verbose_name="UUIDs en archivo Poliza:", null=False, unique=False)
     total_UUID_sat_poliza = models.BigIntegerField(verbose_name="UUIDs del SAT en Poliza:", null=False, unique=False)
@@ -344,14 +344,14 @@ class CifrasComparacionFecha(models.Model):
 
 class Diferencias(models.Model):
     #modelo para guardar las diferencias encontradas al comparar
-    field_sat = models.ForeignKey(DatosArchivo, verbose_name="Registro SAT:", on_delete=False, null=True)
-    field_poliza = models.ForeignKey(DatosPoliza, verbose_name="Registro Poliza:", on_delete=False, null=True)
+    field_sat = models.ForeignKey(DatosArchivo, verbose_name="Registro SAT:", on_delete=models.CASCADE, null=True)
+    field_poliza = models.ForeignKey(DatosPoliza, verbose_name="Registro Poliza:", on_delete=models.CASCADE, null=True)
     field_sat_value = models.CharField(verbose_name="Valor en SAT:", max_length=200, null=False, blank=True, unique=False)
     field_poliza_value = models.CharField(verbose_name="Valor en Poliza:", max_length=200, null=False, blank=True, unique=False)
     diferencia = models.CharField(verbose_name="Atributo:", max_length=200, null=False, blank=True, unique=False)
     nivel_comparacion = models.CharField(verbose_name="Nivel de Comparación:", max_length=200, null=False, blank=True, unique=False)
     source = models.CharField(verbose_name="Archivo Fuente:", max_length=200, null=False, blank=True, unique=False)
-    comparacion = models.ForeignKey(CompararArchivos, verbose_name="Comparación:", null=False, on_delete=False,)
+    comparacion = models.ForeignKey(CompararArchivos, verbose_name="Comparación:", null=False, on_delete=models.CASCADE,)
 
 
     class Meta:
@@ -364,14 +364,14 @@ class Diferencias(models.Model):
 
 class DiferenciasFecha(models.Model):
     #modelo para guardar las diferencias encontradas al comparar
-    field_sat = models.ForeignKey(DatosArchivo, verbose_name="Registro SAT:", on_delete=False, null=True)
-    field_poliza = models.ForeignKey(DatosPoliza, verbose_name="Registro Poliza:", on_delete=False, null=True)
+    field_sat = models.ForeignKey(DatosArchivo, verbose_name="Registro SAT:", on_delete=models.CASCADE, null=True)
+    field_poliza = models.ForeignKey(DatosPoliza, verbose_name="Registro Poliza:", on_delete=models.CASCADE, null=True)
     field_sat_value = models.CharField(verbose_name="Valor en SAT:", max_length=200, null=False, blank=True, unique=False)
     field_poliza_value = models.CharField(verbose_name="Valor en Poliza:", max_length=200, null=False, blank=True, unique=False)
     diferencia = models.CharField(verbose_name="Atributo:", max_length=200, null=False, blank=True, unique=False)
     nivel_comparacion = models.CharField(verbose_name="Nivel de Comparación:", max_length=200, null=False, blank=True, unique=False)
     source = models.CharField(verbose_name="Archivo Fuente:", max_length=200, null=False, blank=True, unique=False)
-    comparacion = models.ForeignKey(CompararPorFecha, verbose_name="Comparación:", null=False, on_delete=False,)
+    comparacion = models.ForeignKey(CompararPorFecha, verbose_name="Comparación:", null=False, on_delete=models.CASCADE,)
 
 
     class Meta:
@@ -387,7 +387,7 @@ class LogEventos(models.Model):
     accion = models.CharField(verbose_name="Acción", max_length=200, null=False, blank=True, unique=False)
     registros_procesados = models.BigIntegerField(verbose_name="Total de registros procesados", null=False, unique=False)
     fecha_proceso = models.DateTimeField(verbose_name="Fecha / Hora de proceso", auto_now=True, null=False, blank=False)
-    usuario_proceso = models.ForeignKey(User, verbose_name="Usuario", blank="False", null=False, related_name="Usuario", on_delete=False,)
+    usuario_proceso = models.ForeignKey(User, verbose_name="Usuario", blank="False", null=False, related_name="Usuario", on_delete=models.CASCADE,)
 
     class Meta:
         verbose_name = "Log de Eventos"
